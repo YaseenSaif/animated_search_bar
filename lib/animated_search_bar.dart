@@ -26,35 +26,35 @@ class AnimatedSearchBar extends StatefulWidget {
   /// [textInputAction] is the action to take when the user presses
   ///   the keyboard's done button.
 
-  const AnimatedSearchBar(
-      {Key? key,
-      this.label = '',
-      this.labelAlignment = Alignment.centerLeft,
-      this.labelTextAlign = TextAlign.start,
-      this.onChanged,
-      this.labelStyle = const TextStyle(
-        fontSize: 14,
-        fontWeight: FontWeight.bold,
+  const AnimatedSearchBar({Key? key,
+    this.label = '',
+    this.labelAlignment = Alignment.centerLeft,
+    this.labelTextAlign = TextAlign.start,
+    this.onChanged,
+    this.labelStyle = const TextStyle(
+      fontSize: 14,
+      fontWeight: FontWeight.bold,
+    ),
+    this.searchDecoration = const InputDecoration(
+      labelText: 'Search',
+      alignLabelWithHint: true,
+      contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.all(Radius.circular(8)),
       ),
-      this.searchDecoration = const InputDecoration(
-        labelText: 'Search',
-        alignLabelWithHint: true,
-        contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.all(Radius.circular(8)),
-        ),
-      ),
-      this.animationDuration = const Duration(milliseconds: 350),
-      this.searchStyle = const TextStyle(color: Colors.black),
-      this.cursorColor,
-      this.duration = const Duration(milliseconds: 300),
-      this.height = 60,
-      this.closeIcon = const Icon(Icons.close, key: ValueKey('close')),
-      this.searchIcon = const Icon(Icons.search, key: ValueKey('search')),
-      this.controller,
-      this.onFieldSubmitted,
-      this.textInputAction = TextInputAction.search,
-      this.onClose})
+    ),
+    this.animationDuration = const Duration(milliseconds: 350),
+    this.searchStyle = const TextStyle(color: Colors.black),
+    this.cursorColor,
+    this.cursorHeight,
+    this.duration = const Duration(milliseconds: 300),
+    this.height = 60,
+    this.closeIcon = const Icon(Icons.close, key: ValueKey('close')),
+    this.searchIcon = const Icon(Icons.search, key: ValueKey('search')),
+    this.controller,
+    this.onFieldSubmitted,
+    this.textInputAction = TextInputAction.search,
+    this.onClose})
       : super(key: key);
 
   final String label;
@@ -66,6 +66,7 @@ class AnimatedSearchBar extends StatefulWidget {
   final Duration animationDuration;
   final TextStyle searchStyle;
   final Color? cursorColor;
+  final double? cursorHeight;
   final Duration duration;
   final double height;
   final Widget closeIcon;
@@ -81,7 +82,7 @@ class AnimatedSearchBar extends StatefulWidget {
 
 class _AnimatedSearchBarState extends State<AnimatedSearchBar> {
   late final ValueNotifier<bool> _isSearch =
-      ValueNotifier(_conSearch.text.isNotEmpty);
+  ValueNotifier(_conSearch.text.isNotEmpty);
   final _fnSearch = FocusNode();
   late final _debouncer = Debouncer(delay: widget.duration);
 
@@ -127,48 +128,50 @@ class _AnimatedSearchBarState extends State<AnimatedSearchBar> {
                 builder: (_, bool value, __) {
                   return value
                       ? SizedBox(
-                          key: const ValueKey('textF'),
-                          height: widget.height,
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: TextFormField(
-                              focusNode: _fnSearch,
-                              controller: _conSearch,
-                              keyboardType: TextInputType.text,
-                              textInputAction: widget.textInputAction,
-                              textAlign: widget.labelTextAlign,
-                              style: widget.searchStyle,
-                              minLines: 1,
-                              cursorColor: widget.cursorColor ??
-                                  ThemeData().primaryColor,
-                              textAlignVertical: TextAlignVertical.center,
-                              decoration: widget.searchDecoration,
-                              onChanged: widget.onChanged != null
-                                  ? (value) => _debouncer
-                                      .run(() => widget.onChanged?.call(value))
-                                  : null,
-                              onFieldSubmitted: widget.onFieldSubmitted,
-                            ),
-                          ),
-                        )
+                    key: const ValueKey('textF'),
+                    height: widget.height,
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextFormField(
+                        focusNode: _fnSearch,
+                        controller: _conSearch,
+                        keyboardType: TextInputType.text,
+                        textInputAction: widget.textInputAction,
+                        textAlign: widget.labelTextAlign,
+                        style: widget.searchStyle,
+                        cursorHeight: widget.cursorHeight,
+                        minLines: 1,
+                        cursorColor: widget.cursorColor ??
+                            ThemeData().primaryColor,
+                        textAlignVertical: TextAlignVertical.center,
+                        decoration: widget.searchDecoration,
+                        onChanged: widget.onChanged != null
+                            ? (value) =>
+                            _debouncer
+                                .run(() => widget.onChanged?.call(value))
+                            : null,
+                        onFieldSubmitted: widget.onFieldSubmitted,
+                      ),
+                    ),
+                  )
                       : SizedBox(
-                          key: const ValueKey('align'),
-                          height: 60,
-                          child: Align(
-                            alignment: widget.labelAlignment,
-                            child: Text(
-                              widget.label,
-                              style: widget.labelStyle,
-                              textAlign: widget.labelTextAlign,
-                            ),
-                          ),
-                        );
+                    key: const ValueKey('align'),
+                    height: 60,
+                    child: Align(
+                      alignment: widget.labelAlignment,
+                      child: Text(
+                        widget.label,
+                        style: widget.labelStyle,
+                        textAlign: widget.labelTextAlign,
+                      ),
+                    ),
+                  );
                 },
               ),
             ),
           ),
-          IconButton(
-            icon: AnimatedSwitcher(
+          Padding(padding: EdgeInsets.symmetric(horizontal: 4), child: InkWell(
+            child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 350),
               transitionBuilder: (Widget child, Animation<double> animation) {
                 final inAnimation = Tween<Offset>(
@@ -192,10 +195,10 @@ class _AnimatedSearchBarState extends State<AnimatedSearchBar> {
               child: ValueListenableBuilder(
                 valueListenable: _isSearch,
                 builder: (_, bool value, __) =>
-                    value ? widget.closeIcon : widget.searchIcon,
+                value ? widget.closeIcon : widget.searchIcon,
               ),
             ),
-            onPressed: () {
+            onTap: () {
               if (_isSearch.value && _conSearch.text.isNotEmpty) {
                 _conSearch.clear();
                 widget.onChanged?.call(_conSearch.text);
@@ -205,7 +208,8 @@ class _AnimatedSearchBarState extends State<AnimatedSearchBar> {
                 if (_isSearch.value) _fnSearch.requestFocus();
               }
             },
-          ),
+          ),)
+          ,
         ],
       ),
     );
